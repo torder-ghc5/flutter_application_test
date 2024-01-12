@@ -2,8 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future main() async {
+  // dotenv 초기화
+  await dotenv.load();
+
   // 위젯 바인딩 초기화 : 웹뷰와 플러터 엔진과의 상호작용을 위함
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -42,6 +46,7 @@ class _MyAppState extends State<MyApp> {
       ios: IOSInAppWebViewOptions(
         allowsInlineMediaPlayback: true, // 웹뷰 내 미디어 재생 허용
       ));
+  String webviewUrl = dotenv.env['WEBVIEW_URL'] ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +63,7 @@ class _MyAppState extends State<MyApp> {
                     //     InAppWebViewInitialData(data: """ """), // 코드 작성
                     // // 초기 설정
                     // initialOptions: options,
-                    initialUrlRequest:
-                        URLRequest(url: WebUri("http://192.168.11.42:5173/")),
+                    initialUrlRequest: URLRequest(url: WebUri(webviewUrl)),
                     // 인앱웹뷰 생성 시 컨트롤러 정의
                     onWebViewCreated: (controller) {
                       webViewController = controller;
