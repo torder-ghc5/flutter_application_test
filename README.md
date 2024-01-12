@@ -1,16 +1,16 @@
 # flutter_application_test
 
-A new Flutter project.
+## 1. 라이브러리 설치
 
-## Getting Started
+- flutter pub get 명령어를 통해 필요한 라이브러리들 설치
+- iOS 테스트를 위해 cd ios > pod install 명령어 실행
 
-This project is a starting point for a Flutter application.
+## 2. dotenv 설정
 
-A few resources to get you started if this is your first Flutter project:
+.env_example을 참고하여 dotenv 설정
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+WEBVIEW_URL에 들어갈 값 설정하는 법
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. 본인이 사용하고 있는 와이파이의 IP 주소 확인 <br />
+   참고: https://cloud101.tistory.com/31
+2. 웹뷰에 띄우고 싶은 프로젝트 실행 후 http://${wifi ip}:${port} 형태로 입력
