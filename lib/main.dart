@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/services.dart';
 
-Future main() async {
+main() async {
   // dotenv 초기화
   await dotenv.load();
 
@@ -12,7 +14,7 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid) {
-    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+    await InAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
 
   runApp(
@@ -30,51 +32,70 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   // 인앱웹뷰 컨트롤러
   InAppWebViewController? webViewController;
-  InAppWebViewGroupOptions options = InAppWebViewGroupOptions(
-      // 플랫폼 상관없이 동작하는 옵션
-      crossPlatform: InAppWebViewOptions(
-        useShouldOverrideUrlLoading: true, // URL 로딩 제어
-        mediaPlaybackRequiresUserGesture: false, // 미디어 자동 재생
-        javaScriptEnabled: true, // 자바스크립트 실행 여부
-        javaScriptCanOpenWindowsAutomatically: true, // 팝업 여부
-      ),
-      // 안드로이드 옵션
-      android: AndroidInAppWebViewOptions(
-        useHybridComposition: true, // 하이브리드 사용을 위한 안드로이드 웹뷰 최적화
-      ),
-      // iOS 옵션
-      ios: IOSInAppWebViewOptions(
-        allowsInlineMediaPlayback: true, // 웹뷰 내 미디어 재생 허용
-      ));
+
+  InAppWebViewSettings options = InAppWebViewSettings(
+    useShouldOverrideUrlLoading: true, // URL 로딩 제어
+    mediaPlaybackRequiresUserGesture: false, // 미디어 자동 재생
+    javaScriptEnabled: true, // 자바스크립트 실행 여부
+    javaScriptCanOpenWindowsAutomatically: true, // 팝업 여부
+    useHybridComposition: true, // 하이브리드 사용을 위한 안드로이드 웹뷰 최적화
+    allowsInlineMediaPlayback: true, // 웹뷰 내 미디어 재생 허용
+  );
+
+  // network 연결 확인
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  @override
+  initState() {
+    super.initState();
+
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  @override
+  dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result;
+    });
+
+    sendMessageToWeb();
+  }
+
+  // 웹뷰 화면 띄우기
   String webviewUrl = dotenv.env['WEBVIEW_URL'] ?? '';
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: List.empty());
+
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: Stack(
-                children: [
-                  InAppWebView(
-                    // // 시작 페이지
-                    // initialData:
-                    //     InAppWebViewInitialData(data: """ """), // 코드 작성
-                    // // 초기 설정
-                    // initialOptions: options,
-                    initialUrlRequest: URLRequest(url: WebUri(webviewUrl)),
-                    // 인앱웹뷰 생성 시 컨트롤러 정의
-                    onWebViewCreated: (controller) {
-                      webViewController = controller;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
+        child: InAppWebView(
+          initialUrlRequest: URLRequest(url: WebUri(webviewUrl)),
+          onWebViewCreated: (controller) {
+            webViewController = controller;
+            controller.addJavaScriptHandler(
+                handlerName: 'flutterHandler',
+                callback: (args) {
+                  return _connectionStatus;
+                });
+          },
         ),
       ),
     );
+  }
+
+  void sendMessageToWeb() async {
+    await webViewController?.postWebMessage(
+        message: WebMessage(data: '$_connectionStatus'),
+        targetOrigin: WebUri(webviewUrl));
   }
 }
