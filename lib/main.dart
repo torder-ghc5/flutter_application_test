@@ -76,18 +76,22 @@ class _MyAppState extends State<MyApp> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: List.empty());
 
-    return Scaffold(
-      body: SafeArea(
-        child: InAppWebView(
-          initialUrlRequest: URLRequest(url: WebUri(webviewUrl)),
-          onWebViewCreated: (controller) {
-            webViewController = controller;
-            controller.addJavaScriptHandler(
-                handlerName: 'flutterHandler',
-                callback: (args) {
-                  return _connectionStatus;
-                });
-          },
+    MediaQueryData mediaQueryData = MediaQuery.of(context);
+    return OverflowBox(
+      maxWidth: mediaQueryData.size.width + 1,
+      child: Scaffold(
+        body: SafeArea(
+          child: InAppWebView(
+            initialUrlRequest: URLRequest(url: WebUri(webviewUrl)),
+            onWebViewCreated: (controller) {
+              webViewController = controller;
+              controller.addJavaScriptHandler(
+                  handlerName: 'flutterHandler',
+                  callback: (args) {
+                    return _connectionStatus;
+                  });
+            },
+          ),
         ),
       ),
     );
