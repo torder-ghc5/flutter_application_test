@@ -70,6 +70,7 @@ class _MyAppState extends State<MyApp> {
 
   // 웹뷰 화면 띄우기
   String webviewUrl = dotenv.env['WEBVIEW_URL'] ?? '';
+  String env = dotenv.env['ENVIRONMENT'] ?? 'development';
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +94,11 @@ class _MyAppState extends State<MyApp> {
             },
           ),
         ),
+        floatingActionButton: env == 'development'
+            ? FloatingActionButton(
+                onPressed: () {},
+              )
+            : null,
       ),
     );
   }
